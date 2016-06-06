@@ -14,9 +14,9 @@ public class Drug implements Serializable{
 		super();
 	}
 
-	private String durgId;
-	public String getDurgId() {	return durgId;	}
-	public void setDurgId(String durgId) {	this.durgId = durgId;	}
+	private String drugId;
+	public String getDrugId() {	return drugId;	}
+	public void setDrugId(String drugId) {	this.drugId = drugId;	}
 	
 	private String fdbGcnSeqNum;
 	public String getFdbGcnSeqNum() {	return fdbGcnSeqNum;	}
