@@ -1,6 +1,10 @@
 package dtotest;
 
 import java.io.File;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import dto.Pharmacy;
 import util.Json2Codec;
 import com.thoughtworks.xstream.XStream;
@@ -24,6 +28,7 @@ public class PharmacyCodeTest
 		String state = new String("MD");
 		String zip = new String("20005");
 		dto.setAddress(address1, address2, city, state, zip);
+		System.out.println( ToStringBuilder.reflectionToString(dto.getAddress(), ToStringStyle.MULTI_LINE_STYLE) );
 		dto.setEmail("pharmer@pharmacy.com");
 		dto.setFax("2020400");
 		dto.setH24Store(true);
@@ -155,9 +160,9 @@ public class PharmacyCodeTest
 		//agent.read_XML();
 		
 		//agent.codec_XML();
-		agent.read_XML();
+		//agent.read_XML();
 		
-		//agent.codec_Pharm();
+		agent.codec_Pharm();
 		
 		System.exit(0);
 	}

@@ -3,15 +3,13 @@ package dto;
 import java.io.Serializable;
 
 public class Address implements Serializable{
+	private static final long serialVersionUID = 1L;
 	
 	public Address()
 	{
-		this.setAddress1(null);
-		this.setAddress2(null);
-		this.setCity(null);
-		this.setCode(null);
-		this.setZip(null);
+		super();
 	}
+	
 	public Address(String add1, String add2, String city, String zip, String code)
 	{
 		this.setAddress1(add1);
@@ -21,7 +19,8 @@ public class Address implements Serializable{
 		this.setCode(code);
 	}
 	
-	private static final long serialVersionUID = 1L;
+	
+
 	private String address1;	
 	public String getAddress1() {	return address1;	}
 	public void setAddress1(String address) {	this.address1 = address;	}
@@ -52,4 +51,10 @@ public class Address implements Serializable{
 		return address;
 	}
 	*/
+
+	@Override
+	public String toString() {
+		return "Address [address1=" + address1 + ", address2=" + address2 + ", city=" + city + ", zip=" + zip
+				+ ", code=" + code + "]";
+	}
 }
