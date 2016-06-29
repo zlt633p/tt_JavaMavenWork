@@ -1,6 +1,7 @@
 package httpSample;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.http.*;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -14,15 +15,17 @@ import org.apache.commons.lang3.StringEscapeUtils;
 
 
 
+
+
+import org.omg.CORBA.portable.InputStream;
+
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-
-
-
-
 
 
 
@@ -42,10 +45,11 @@ public class HttpSample {
 	public void init(){
 		httpClient = HttpClients.createDefault();		
 	}
-	public UploadResponse runUploadGet()
+	public UploadResponse runUploadGet(String fileName)
 	{
 		UploadResponse upload = null;
-		String page = new String("https://drfirst.brickftp.com/api/rest/v1/files/testing.txt");
+		String page = new String("https://drfirst.brickftp.com/api/rest/v1/files/");
+		page = page.concat(fileName);
 		String authString = new String("79094c529c0bf4bd2279018800ef40064ab38934:x");
 		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
 		String authStringEnc = new String(authEncBytes);
@@ -78,11 +82,13 @@ public class HttpSample {
 		}
 		return upload;
 	}
-	public UploadResponse runUploadStart()
+	public UploadResponse runUploadStart(String fileName)
 	{
 		UploadResponse upload = null;
 		String page = null;
-		page = new String("https://drfirst.brickftp.com/api/rest/v1/files/testing.txt");
+		page = new String("https://drfirst.brickftp.com/api/rest/v1/files/");
+		page = page.concat(fileName);
+		System.out.println(page);
 		String authString = new String("79094c529c0bf4bd2279018800ef40064ab38934:x");
 		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
 		String authStringEnc = new String(authEncBytes);
@@ -96,7 +102,6 @@ public class HttpSample {
 			httppost.setEntity(input);
 			System.out.println(httppost.getRequestLine());
 			CloseableHttpResponse response = httpClient.execute(httppost);
-			HttpEntity entity = response.getEntity();
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader((response.getEntity().getContent())));
 			
@@ -119,12 +124,12 @@ public class HttpSample {
 		return upload;
 	}
 	
-	public void runUploadAWSStep(String url)
+	public void runUploadAWSStep(String url, String filePath)
 	{	
 		HttpPut httpPut = new HttpPut(url);
 		try {
 			CloseableHttpResponse response = null;
-			File file = new File("testing.txt");
+			File file = new File(filePath);
 			
 			FileEntity input = new FileEntity(file);
 			httpPut.setEntity(input);
@@ -146,9 +151,10 @@ public class HttpSample {
 		}
 	}
 		
-	public void closeUpload(String refId)
+	public void closeUpload(String refId, String fileName)
 	{
-		String page = new String("https://drfirst.brickftp.com/api/rest/v1/files/testing.txt");
+		String page = new String("https://drfirst.brickftp.com/api/rest/v1/files/");
+		page = page.concat(fileName);
 		String authString = new String("79094c529c0bf4bd2279018800ef40064ab38934:x");
 		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
 		String authStringEnc = new String(authEncBytes);
@@ -179,17 +185,46 @@ public class HttpSample {
 		}
 	}
 	
+	public void downloadFile(String downloadURL, String filePath)
+	{
+		HttpGet httpget = new HttpGet(downloadURL);
+		try {
+			HttpResponse response = httpClient.execute(httpget);
+			HttpEntity entity = response.getEntity();
+			if(entity != null)
+			{
+				long len = entity.getContentLength();
+				BufferedInputStream is = new BufferedInputStream(entity.getContent());
+				FileOutputStream fos = new FileOutputStream(new File(filePath));
+				int inByte;
+				while((inByte = is.read()) != -1)
+				     fos.write(inByte);
+				is.close();
+				fos.close();
+			}
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+	
 	public static void main(String[] args) throws MalformedURLException
 	{
 		UploadResponse upload = null;
 		UploadResponse download = null;
 		HttpSample sample = new HttpSample();
-		upload = sample.runUploadStart();
+		String fileName = new String("testing.docx");
+		String path = new String("C:\\users\\ncheng\\documents\\testingJava.docx");
+		upload = sample.runUploadStart(fileName);
 		
-		//System.out.println(upload.getUpload_uri());
-		sample.runUploadAWSStep(upload.getUpload_uri());
-		sample.closeUpload(upload.getRef());
-		download = sample.runUploadGet();
+		sample.runUploadAWSStep(upload.getUpload_uri(), fileName);
+		sample.closeUpload(upload.getRef(), fileName);
+		download = sample.runUploadGet(fileName);
+		sample.downloadFile(download.getDownload_uri(), path);
 		
 		System.out.println("Paste this link into browser: \n" + download.getDownload_uri());
 	}
