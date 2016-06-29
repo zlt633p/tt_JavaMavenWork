@@ -13,12 +13,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.commons.lang3.StringEscapeUtils;
 
-
-
-
-
-import org.omg.CORBA.portable.InputStream;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -187,7 +181,9 @@ public class HttpSample {
 	
 	public void downloadFile(String downloadURL, String filePath)
 	{
+		long startTime = System.currentTimeMillis();
 		HttpGet httpget = new HttpGet(downloadURL);
+		Thread t = new Thread();
 		try {
 			HttpResponse response = httpClient.execute(httpget);
 			HttpEntity entity = response.getEntity();
@@ -202,6 +198,10 @@ public class HttpSample {
 				is.close();
 				fos.close();
 			}
+			
+			long endTime = System.currentTimeMillis();
+
+			System.out.println("That took " + (endTime - startTime) + " milliseconds");
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -217,16 +217,20 @@ public class HttpSample {
 		UploadResponse upload = null;
 		UploadResponse download = null;
 		HttpSample sample = new HttpSample();
-		String fileName = new String("testing.docx");
-		String path = new String("C:\\users\\ncheng\\documents\\testingJava.docx");
+		String fileName = new String("testing.zip");
+		String newPath = new String ("C:\\Users\\ncheng\\Downloads\\eclipse-java-kepler-SR2-win32-x86_64.zip");
+		String path = new String("C:\\users\\ncheng\\documents\\testingJava.zip");
 		upload = sample.runUploadStart(fileName);
 		
-		sample.runUploadAWSStep(upload.getUpload_uri(), fileName);
+		sample.runUploadAWSStep(upload.getUpload_uri(), newPath);
 		sample.closeUpload(upload.getRef(), fileName);
 		download = sample.runUploadGet(fileName);
-		sample.downloadFile(download.getDownload_uri(), path);
-		
 		System.out.println("Paste this link into browser: \n" + download.getDownload_uri());
+		
+		sample.downloadFile(download.getDownload_uri(), path);
+
+	
+		
 	}
 
 }
