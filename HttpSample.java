@@ -205,7 +205,6 @@ public class HttpSample {
 	{
 		long startTime = System.currentTimeMillis();
 		HttpGet httpget = new HttpGet(downloadURL);
-		Thread t = new Thread();
 		try {
 			HttpResponse response = httpClient.execute(httpget);
 			HttpEntity entity = response.getEntity();
