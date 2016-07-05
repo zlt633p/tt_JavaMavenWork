@@ -11,6 +11,7 @@ import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.log4j.Logger;
 import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.io.BufferedInputStream;
@@ -27,10 +28,12 @@ import java.net.MalformedURLException;
 
 
 
+
 import util.Json2Codec;
 
 public class HttpSample {
 	static CloseableHttpClient httpClient;
+	private static final Logger logger = Logger.getLogger(HttpFTP.class);
 
 	public HttpSample() {
 		super();
@@ -39,49 +42,47 @@ public class HttpSample {
 	public void init(){
 		httpClient = HttpClients.createDefault();		
 	}
-	
+
 	public UploadResponse runUploadGet(String fileName)
 	{
 		UploadResponse upload = null;
-		String page = new String("https://drfirst.brickftp.com/api/rest/v1/files/");
+		String page = "https://drfirst.brickftp.com/api/rest/v1/files/";
 		page = page.concat(fileName);
-		
+
 		//Authorization
-		String authString = new String("79094c529c0bf4bd2279018800ef40064ab38934:x");
+		String authString = "79094c529c0bf4bd2279018800ef40064ab38934:x";
 		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
 		String authStringEnc = new String(authEncBytes);
 		HttpGet httpGet = new HttpGet(page);
 		httpGet.setHeader("Authorization", "Basic " + authStringEnc);
-		
-		
-		System.out.println(httpGet.getRequestLine());
-		CloseableHttpResponse response = null;
+
+
+		logger.info(httpGet.getRequestLine());
 		try {
-			response = httpClient.execute(httpGet);
+			CloseableHttpResponse response = httpClient.execute(httpGet);
 
-		BufferedReader br = new BufferedReader(
-				new InputStreamReader((response.getEntity().getContent())));
+			BufferedReader br = new BufferedReader(
+					new InputStreamReader((response.getEntity().getContent())));
 
-		String output;
-		System.out.println("Output from Server .... \n");
-		output = br.readLine();
-			System.out.println(output);
+			String output = br.readLine();
+			logger.info("Output from Server .... \n"+output);
+
 			upload = Json2Codec.unmarshal(UploadResponse.class, output);
-			String uploadEscape = new String(StringEscapeUtils.unescapeHtml4(upload.getDownload_uri()));
+			String uploadEscape = StringEscapeUtils.unescapeHtml4(upload.getDownload_uri());
 			upload.setUpload_uri(uploadEscape);
-			
-		response.close();
-		
+
+			response.close();
+
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage(), e);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage(), e);
 		}
 		return upload;
 	}
-	
+
 	/* First step of the upload
 	 * Post to brickftp url files/filename
 	 * stores data from response into UploadResponse
@@ -91,45 +92,41 @@ public class HttpSample {
 	public UploadResponse runUploadStart(String fileName)
 	{
 		UploadResponse upload = null;
-		String page = null;
-		page = new String("https://drfirst.brickftp.com/api/rest/v1/files/");
+		String page = "https://drfirst.brickftp.com/api/rest/v1/files/";
 		page = page.concat(fileName);
-		System.out.println(page);
-		String authString = new String("79094c529c0bf4bd2279018800ef40064ab38934:x");
+		String authString = "79094c529c0bf4bd2279018800ef40064ab38934:x";
 		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
 		String authStringEnc = new String(authEncBytes);
 		try
 		{
 			HttpPost httppost = new HttpPost(page);
-		
+
 			httppost.setHeader("Authorization", "Basic " + authStringEnc);
 			StringEntity input = new StringEntity("{\"action\":\"put\"}"); //request body
 			input.setContentType("application/json");
 			httppost.setEntity(input);
-			System.out.println(httppost.getRequestLine());
+			logger.info(httppost.getRequestLine());
 			CloseableHttpResponse response = httpClient.execute(httppost);
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader((response.getEntity().getContent())));
-			
-			String output;
-			System.out.println("Output from Server .... \n");
-			output = br.readLine();
-				System.out.println(output);
-				upload = Json2Codec.unmarshal(UploadResponse.class, output); //unmarshal json payload from response
-				String uploadEscape = new String(StringEscapeUtils.unescapeHtml4(upload.getUpload_uri()));
-				upload.setUpload_uri(uploadEscape);
+
+			String output = br.readLine();
+			logger.info("Output from Server .... \n"+output);
+			upload = Json2Codec.unmarshal(UploadResponse.class, output); //unmarshal json payload from response
+			String uploadEscape = StringEscapeUtils.unescapeHtml4(upload.getUpload_uri());
+			upload.setUpload_uri(uploadEscape);
 			response.close();
 
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage(), e);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage(), e);
 		}
 		return upload;
 	}
-	
+
 	/*Executes a HttpPut command to the upload link given by the first step (String url)
 	 * returns a null response
 	 */
@@ -137,38 +134,33 @@ public class HttpSample {
 	{	
 		HttpPut httpPut = new HttpPut(url);
 		try {
-			CloseableHttpResponse response = null;
 			File file = new File(filePath);
-			
+
 			FileEntity input = new FileEntity(file);
 			httpPut.setEntity(input);
-			response = httpClient.execute(httpPut);
+			CloseableHttpResponse response = httpClient.execute(httpPut);
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader((response.getEntity().getContent())));
+			logger.info("aws step completed");
 
-			String output;
-			System.out.println("Output from Server .... \n");
-			output = br.readLine();
-				System.out.println(output);
-			
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage(), e);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage(), e);
 		}
 	}
-		
+
 	/*
 	 * closes the upload after it has completed
 	 * body contains action : end and ref from starting step 
 	 */
 	public void closeUpload(String refId, String fileName)
 	{
-		String page = new String("https://drfirst.brickftp.com/api/rest/v1/files/");
+		String page = "https://drfirst.brickftp.com/api/rest/v1/files/";
 		page = page.concat(fileName);
-		String authString = new String("79094c529c0bf4bd2279018800ef40064ab38934:x");
+		String authString = "79094c529c0bf4bd2279018800ef40064ab38934:x";
 		byte[] authEncBytes = Base64.encodeBase64(authString.getBytes());
 		String authStringEnc = new String(authEncBytes);
 		try
@@ -178,26 +170,24 @@ public class HttpSample {
 			StringEntity input = new StringEntity("{\"action\":\"end\", \"ref\":\""+ refId+ "\"}"); //request body with refId
 			input.setContentType("application/json");
 			httppost.setEntity(input);
-			System.out.println(httppost.getRequestLine());
+			logger.info(httppost.getRequestLine());
 			CloseableHttpResponse response = httpClient.execute(httppost);
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader((response.getEntity().getContent())));
 
-			String output;
-			System.out.println("Output from Server .... \n");
-			output = br.readLine();
-				System.out.println(output);
+			String output = br.readLine();
+			logger.info("Output from Server .... \n"+output);
 			response.close();
 
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage(), e);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage(), e);
 		}
 	}
-	
+
 	/*downloads file from aws download link, which can be accessed by command runUploadGet or from UploadResponse class
 	 * 
 	 */
@@ -205,7 +195,6 @@ public class HttpSample {
 	{
 		long startTime = System.currentTimeMillis();
 		HttpGet httpget = new HttpGet(downloadURL);
-		Thread t = new Thread();
 		try {
 			HttpResponse response = httpClient.execute(httpget);
 			HttpEntity entity = response.getEntity();
@@ -216,46 +205,45 @@ public class HttpSample {
 				FileOutputStream fos = new FileOutputStream(new File(filePath));
 				int inByte;
 				while((inByte = is.read()) != -1)
-				     fos.write(inByte);
+					fos.write(inByte);
 				is.close();
 				fos.close();
 			}
-			
+
 			long endTime = System.currentTimeMillis();
 
-			System.out.println("That took " + (endTime - startTime) + " milliseconds");
+			logger.info("That took " + (endTime - startTime) + " milliseconds");
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage(), e);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.warn(e.getMessage(), e);
 		}
-		
+
 	}
-	
+
 	public static void main(String[] args) throws MalformedURLException
 	{
-		UploadResponse upload = null;
-		UploadResponse download = null;
-		HttpSample sample = new HttpSample();
-		
-//		String fileName = new String("testing.zip");
-//		String upPath = new String ("C:\\Users\\ncheng\\Downloads\\spring-tool-suite-3.7.3.RELEASE-e4.5.2-win32-x86_64.zip");
-//		String path = new String("C:\\users\\ncheng\\documents\\testingJava.zip");
-		
 		String fileName = new String("testing.txt");
 		String upPath = new String ("testing.txt");
 		String path = new String("C:\\users\\ncheng\\documents\\testingJava.txt");
 		
-		upload = sample.runUploadStart(fileName);
+		//Using HttpFTP
+		String downloadURI = HttpFTP.upload(fileName, path);
+		byte[] download = HttpFTP.download(downloadURI);
+		logger.info(download);
 		
-		sample.runUploadAWSStep(upload.getUpload_uri(), upPath);
-		sample.closeUpload(upload.getRef(), fileName);
-		download = sample.runUploadGet(fileName);
-		System.out.println("Paste this link into browser: \n" + download.getDownload_uri());
-		
-		sample.downloadFile(download.getDownload_uri(), path);	
+		//using HttpSample
+//		HttpSample sample = new HttpSample();
+//		UploadResponse upload = sample.runUploadStart(fileName);
+//
+//		sample.runUploadAWSStep(upload.getUpload_uri(), upPath);
+//		sample.closeUpload(upload.getRef(), fileName);
+//		UploadResponse download2 = sample.runUploadGet(fileName);
+//		System.out.println("Paste this link into browser: \n" + download2.getDownload_uri());
+//
+//		sample.downloadFile(download2.getDownload_uri(), path);	
 	}
 
 }
