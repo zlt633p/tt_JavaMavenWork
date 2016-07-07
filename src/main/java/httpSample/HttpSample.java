@@ -57,9 +57,9 @@ public class HttpSample {
 		BufferedReader br = new BufferedReader(
 				new InputStreamReader((response.getEntity().getContent())));
 
-		String output;
+		
 		System.out.println("Output from Server .... \n");
-		output = br.readLine();
+		String output = br.readLine();
 			System.out.println(output);
 			upload = Json2Codec.unmarshal(UploadResponse.class, output);
 			String uploadEscape = new String(StringEscapeUtils.unescapeHtml4(upload.getDownload_uri()));
