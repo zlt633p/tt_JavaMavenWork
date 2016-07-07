@@ -65,7 +65,8 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.3.2</version>
-		</dependency>               
+		</dependency>
+		<dependency><groupId>log4j</groupId><artifactId>log4j</artifactId><version>1.2.16</version></dependency>            
 	</dependencies>
 	
 	<build><plugins>
